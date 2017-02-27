@@ -1,6 +1,10 @@
 
 import Foundation
-import UIKit
+
+protocol PullRequestViewModelDelegate: class {
+  func pullRequestsRequestSuccess(_ pullRequestsViewModel: [PullRequestViewModel])
+  func pullRequestsRequestError(_ statusCode: Int, _ response: Any?, _ error: Error?)
+}
 
 class PullRequestViewModel {
   
@@ -9,7 +13,13 @@ class PullRequestViewModel {
     case closed = "closed"
   }
   
-  private var pullRequest: PullRequest
+  weak var delegate: PullRequestViewModelDelegate?
+  fileprivate var pullRequest: PullRequest!
+  
+  convenience init(_ pullRequest: PullRequest) {
+    self.init()
+    self.pullRequest = pullRequest
+  }
   
   var title: String {
     return self.pullRequest.title
@@ -40,11 +50,28 @@ class PullRequestViewModel {
     return URL(string: self.pullRequest.ownerAvatarUrl)!
   }
   
-  init(pullRequest: PullRequest) {
-    self.pullRequest = pullRequest
+  func getPullRequests(_ owner: String, repository: String) {
+    
+    PullRequestApi.getPullRequests(owner, repository: repository, success: { pullRequests in
+      
+      var pullRequestsViewModel = [PullRequestViewModel]()
+      
+      for pullRequest in pullRequests {
+        let pullRequestViewModel = PullRequestViewModel(pullRequest)
+        pullRequestsViewModel.append(pullRequestViewModel)
+      }
+      
+      self.delegate?.pullRequestsRequestSuccess(pullRequestsViewModel)
+      
+    }) { (statusCode, response, error) in
+      
+      self.delegate?.pullRequestsRequestError(statusCode, response, error)
+      
+    }
+    
   }
   
-  class func totalStates(_ pulls: [PullRequestViewModel]) -> NSAttributedString {
+  class func getTotalStates(_ pulls: [PullRequestViewModel]) -> (open: Int, closed: Int) {
     
     var totalOpen = 0
     var totalClosed = 0
@@ -58,25 +85,7 @@ class PullRequestViewModel {
       }
     }
     
-    let totalOpenCharacters = String(describing: totalOpen).characters.count + 8
-    
-    let attributes = [[
-      "attributes": [
-        NSFontAttributeName: StyleGuide.Font.Number.value,
-        NSForegroundColorAttributeName: StyleGuide.Color.Orange.value
-      ],
-      "location": 0,
-      "length": totalOpenCharacters
-    ],[
-      "attributes": [
-        NSFontAttributeName: StyleGuide.Font.Number.value,
-        NSForegroundColorAttributeName: StyleGuide.Color.Black.value
-      ],
-      "location": totalOpenCharacters,
-      "length": 0
-    ]]
-    
-    return "\(totalOpen) opened / \(totalClosed) closed".attributedWithRange(attributes)
+    return (totalOpen, totalClosed)
     
   }
   

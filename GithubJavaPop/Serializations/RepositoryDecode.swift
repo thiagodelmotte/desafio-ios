@@ -1,7 +1,7 @@
 
 class RepositoryDecode {
   
-  class func map(json: JSONSerializer) -> Repository {
+  class func map(_ json: JSONSerializer) -> Repository {
     
     let name = json.object["name"].stringValue
     let description = json.object["description"].stringValue
@@ -10,7 +10,7 @@ class RepositoryDecode {
     let ownerNick = json.object["owner"]["login"].stringValue
     let ownerAvatarUrl = json.object["owner"]["avatar_url"].stringValue
     
-    return Repository(name: name, description: description, forks: forks, favorites: favorites, ownerNick: ownerNick, ownerAvatarUrl: ownerAvatarUrl)
+    return Repository(name, description: description, forks: forks, favorites: favorites, ownerNick: ownerNick, ownerAvatarUrl: ownerAvatarUrl)
     
   }
   

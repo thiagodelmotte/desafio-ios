@@ -1,18 +1,18 @@
 
 import Foundation
 
-typealias completionPRSuccess = (_ pullRequestViewModel: [PullRequestViewModel]) -> Void
+typealias completionPRSuccess = (_ pullRequests: [PullRequest]) -> Void
 typealias completionPRFailure = (_ statusCode: Int, _ response: Any?, _ error: Error?) -> Void
 
 class PullRequestApi: Api {
   
-  class func getPullRequests(owner: String, repository: String, success: @escaping completionPRSuccess, failure: @escaping completionPRFailure) {
+  class func getPullRequests(_ owner: String, repository: String, success: @escaping completionPRSuccess, failure: @escaping completionPRFailure) {
     
     let url = "\(Bundle.main.apiEntrypoint)/repos/\(owner)/\(repository)/pulls"
     
-    super.request(method: .GET, url: url, success: { (statusCode, response) in
+    super.request(.GET, url: url, success: { (statusCode, response) in
       
-      var pullRequestsViewModel = [PullRequestViewModel]()
+      var pullRequests = [PullRequest]()
       let itemsArray = response.object.array
       
       guard itemsArray != nil else {
@@ -24,12 +24,11 @@ class PullRequestApi: Api {
       
       for item in items.object {
         let json = JSONSerializer(item.1.object)
-        let pullRequest = PullRequestDecode.map(json: json)
-        let pullRequestViewModel = PullRequestViewModel(pullRequest: pullRequest)
-        pullRequestsViewModel.append(pullRequestViewModel)
+        let pullRequest = PullRequestDecode.map(json)
+        pullRequests.append(pullRequest)
       }
       
-      success(pullRequestsViewModel)
+      success(pullRequests)
       
     }) { (statusCode, response, error) in
       

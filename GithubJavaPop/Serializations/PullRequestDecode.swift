@@ -1,7 +1,7 @@
 
 class PullRequestDecode {
   
-  class func map(json: JSONSerializer) -> PullRequest {
+  class func map(_ json: JSONSerializer) -> PullRequest {
     
     let title = json.object["title"].stringValue
     let body = json.object["body"].stringValue
@@ -11,7 +11,7 @@ class PullRequestDecode {
     let ownerNick = json.object["user"]["login"].stringValue
     let ownerAvatarUrl = json.object["user"]["avatar_url"].stringValue
     
-    return PullRequest(title: title, body: body, date: date, url: url, state: state, ownerNick: ownerNick, ownerAvatarUrl: ownerAvatarUrl)
+    return PullRequest(title, body: body, date: date, url: url, state: state, ownerNick: ownerNick, ownerAvatarUrl: ownerAvatarUrl)
     
   }
   

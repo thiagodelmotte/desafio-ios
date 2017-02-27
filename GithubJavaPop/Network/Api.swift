@@ -14,7 +14,7 @@ class Api {
     case disconnected = 12163
   }
   
-  fileprivate class func requestAlamofire(method: httpVerbs, url: String, parameters: [String : AnyObject]?, success: @escaping completionApiSuccess, failure: @escaping completionApiFailure) {
+  fileprivate class func requestAlamofire(_ method: httpVerbs, url: String, parameters: [String : AnyObject]?, success: @escaping completionApiSuccess, failure: @escaping completionApiFailure) {
     
     guard Reachability.isConnected() else {
       failure(statusCodes.disconnected.rawValue, nil, nil)
@@ -41,9 +41,9 @@ class Api {
     
   }
   
-  class func request(method: httpVerbs, url: String, parameters: [String : AnyObject]?, joinAuthToken: Bool = true, success: @escaping completionJSONSuccess, failure: @escaping completionJSONFailure) {
+  class func request(_ method: httpVerbs, url: String, parameters: [String : AnyObject]?, joinAuthToken: Bool = true, success: @escaping completionJSONSuccess, failure: @escaping completionJSONFailure) {
     
-    self.requestAlamofire(method: method, url: url, parameters: parameters, success: { (statusCode, response) in
+    self.requestAlamofire(method, url: url, parameters: parameters, success: { (statusCode, response) in
       
       if let value = response {
         success(_: statusCode, JSONSerializer(value))
@@ -57,8 +57,8 @@ class Api {
     
   }
   
-  class func request(method: httpVerbs, url: String, success: @escaping completionJSONSuccess, failure: @escaping completionJSONFailure) {
-    self.request(method: method, url: url, parameters: nil, success: success, failure: failure)
+  class func request(_ method: httpVerbs, url: String, success: @escaping completionJSONSuccess, failure: @escaping completionJSONFailure) {
+    self.request(method, url: url, parameters: nil, success: success, failure: failure)
   }
   
 }

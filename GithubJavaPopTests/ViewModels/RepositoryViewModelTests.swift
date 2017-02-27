@@ -13,9 +13,9 @@ class RepositoryViewModelTests: XCTestCase {
   
   func testRepositoryViewModel() {
     
-    let arenaRepo = Repository(name: "Arena App", description: "Repository of Arena App", forks: 12938, favorites: 4875, ownerNick: "arena.im", ownerAvatarUrl: "http://arena.im/avatar.jpg")
+    let arenaRepo = Repository("Arena App", description: "Repository of Arena App", forks: 12938, favorites: 4875, ownerNick: "arena.im", ownerAvatarUrl: "http://arena.im/avatar.jpg")
     
-    let repoViewModel = RepositoryViewModel(repository: arenaRepo)
+    let repoViewModel = RepositoryViewModel(arenaRepo)
     
     XCTAssertEqual("Arena App", repoViewModel.name)
     XCTAssertEqual("Repository of Arena App", repoViewModel.description)

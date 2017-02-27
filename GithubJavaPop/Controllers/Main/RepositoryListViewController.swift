@@ -1,21 +1,27 @@
 
-import Foundation
 import UIKit
 
-class RepositoryListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class RepositoryListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, RepositoryViewModelDelegate {
   
   @IBOutlet weak var tableView: UITableView!
   @IBOutlet weak var spinner: UIActivityIndicatorView!
-  fileprivate var repositoriesViewModel = [RepositoryViewModel]()
   fileprivate var currentPage = 0
   fileprivate var isLoading = true
   fileprivate var isConnectionErrorShowed = false
+  fileprivate var repositoriesViewModel = [RepositoryViewModel]()
+  fileprivate var repositoryVM: RepositoryViewModel!
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    self.customizeInterface()
+    self.configure()
     self.configureTableView()
-    self.loadRepositories()
+    self.customizeInterface()
+    self.getRepositories()
+  }
+  
+  fileprivate func configure() {
+    self.repositoryVM = RepositoryViewModel()
+    self.repositoryVM.delegate = self
   }
   
   fileprivate func customizeInterface() {
@@ -34,37 +40,41 @@ class RepositoryListViewController: UIViewController, UITableViewDelegate, UITab
     
   }
   
-  fileprivate func loadRepositories() {
-    
+  fileprivate func getRepositories() {
     self.isLoading = true
+    self.repositoryVM.getRepositories(self.currentPage + 1)
+  }
+  
+  
+  // MARK: - RepositoryViewModelDelegate
+  
+  func repositoriesRequestSuccess(_ repositoriesViewModel: [RepositoryViewModel]) {
     
-    RepositoryApi.getRepositories(page: self.currentPage + 1, success: { repositoriesViewModel in
-      
-      guard repositoriesViewModel.count > 0 else {
-        self.isLoading = false
-        self.isConnectionErrorShowed = false
-        self.spinner.stopAnimating()
-        return
-      }
-      
-      self.repositoriesViewModel += repositoriesViewModel
-      self.tableView.reloadData()
-      self.currentPage += 1
+    guard repositoriesViewModel.count > 0 else {
       self.isLoading = false
       self.isConnectionErrorShowed = false
       self.spinner.stopAnimating()
-      
-    }) { (statusCode, response, error) in
-      
-      if statusCode == Api.statusCodes.disconnected.rawValue && !self.isConnectionErrorShowed {
-        Alert.connectionError()
-        self.isConnectionErrorShowed = true
-      }
-      
-      self.isLoading = false
-      self.spinner.stopAnimating()
-      
+      return
     }
+    
+    self.repositoriesViewModel += repositoriesViewModel
+    self.tableView.reloadData()
+    self.currentPage += 1
+    self.isLoading = false
+    self.isConnectionErrorShowed = false
+    self.spinner.stopAnimating()
+    
+  }
+  
+  func repositoriesRequestError(_ statusCode: Int, _ response: Any?, _ error: Error?) {
+    
+    if statusCode == Api.statusCodes.disconnected.rawValue && !self.isConnectionErrorShowed {
+      Alert.connectionError()
+      self.isConnectionErrorShowed = true
+    }
+    
+    self.isLoading = false
+    self.spinner.stopAnimating()
     
   }
   
@@ -98,7 +108,7 @@ class RepositoryListViewController: UIViewController, UITableViewDelegate, UITab
   func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
     
     if indexPath.row >= (self.repositoriesViewModel.count - 10) && !self.isLoading {
-      self.loadRepositories()
+      self.getRepositories()
     }
     
   }

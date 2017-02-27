@@ -1,18 +1,18 @@
 
 import Foundation
 
-typealias completionRepositorySuccess = (_ repositoriesViewModel: [RepositoryViewModel]) -> Void
+typealias completionRepositorySuccess = (_ repositories: [Repository]) -> Void
 typealias completionRepositoryFailure = (_ statusCode: Int, _ response: Any?, _ error: Error?) -> Void
 
 class RepositoryApi: Api {
   
-  class func getRepositories(page: Int, success: @escaping completionRepositorySuccess, failure: @escaping completionRepositoryFailure) {
+  class func getRepositories(_ page: Int, success: @escaping completionRepositorySuccess, failure: @escaping completionRepositoryFailure) {
     
     let url = "\(Bundle.main.apiEntrypoint)/search/repositories?q=language:Java&sort=stars&page=\(page)"
     
-    super.request(method: .GET, url: url, success: { (statusCode, response) in
+    super.request(.GET, url: url, success: { (statusCode, response) in
       
-      var repositoriesViewModel = [RepositoryViewModel]()
+      var repositories = [Repository]()
       let itemsArray = response.object["items"].array
       
       guard itemsArray != nil else {
@@ -24,12 +24,11 @@ class RepositoryApi: Api {
       
       for item in items.object {
         let json = JSONSerializer(item.1.object)
-        let repository = RepositoryDecode.map(json: json)
-        let repositoryViewModel = RepositoryViewModel(repository: repository)
-        repositoriesViewModel.append(repositoryViewModel)
+        let repository = RepositoryDecode.map(json)
+        repositories.append(repository)
       }
       
-      success(repositoriesViewModel)
+      success(repositories)
       
     }) { (statusCode, response, error) in
       

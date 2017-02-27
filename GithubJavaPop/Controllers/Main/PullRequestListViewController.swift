@@ -1,22 +1,28 @@
 
-import Foundation
 import UIKit
 
-class PullRequestListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class PullRequestListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, PullRequestViewModelDelegate {
   
   @IBOutlet weak var tableView: UITableView!
   @IBOutlet weak var prStatusLabel: UILabel!
   @IBOutlet weak var prStatusHeightConstraint: NSLayoutConstraint!
   @IBOutlet weak var spinner: UIActivityIndicatorView!
+  fileprivate var pullRequestsViewModel = [PullRequestViewModel]()
+  fileprivate var pullRequestVM: PullRequestViewModel!
   var repositoryName: String!
   var repositoryOwner: String!
-  fileprivate var pullRequestsViewModel = [PullRequestViewModel]()
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    self.customizeInterface()
+    self.configure()
     self.configureTableView()
-    self.loadPullRequests()
+    self.customizeInterface()
+    self.getPullRequests()
+  }
+  
+  fileprivate func configure() {
+    self.pullRequestVM = PullRequestViewModel()
+    self.pullRequestVM.delegate = self
   }
   
   fileprivate func customizeInterface() {
@@ -35,23 +41,41 @@ class PullRequestListViewController: UIViewController, UITableViewDelegate, UITa
     
   }
   
-  fileprivate func loadPullRequests() {
-    
-    PullRequestApi.getPullRequests(owner: self.repositoryOwner, repository: self.repositoryName, success: { pullRequestsViewModel in
-      self.pullRequestsViewModel = pullRequestsViewModel
-      self.setTotalState()
-      self.tableView.reloadData()
-      self.spinner.stopAnimating()
-    }) { (statusCode, response, error) in
-      Alert.connectionError()
-      _ = self.navigationController?.popViewController(animated: true)
-    }
-    
+  fileprivate func getPullRequests() {
+    self.pullRequestVM.getPullRequests(self.repositoryOwner, repository: self.repositoryName)
   }
   
   fileprivate func setTotalState() {
+    self.prStatusLabel.attributedText = self.getTotalState()
+    self.animateTotalState()
+  }
+  
+  fileprivate func getTotalState() -> NSAttributedString {
+  
+    let totalState = PullRequestViewModel.getTotalStates(self.pullRequestsViewModel)
+    let totalOpenCharacters = String(describing: totalState.open).characters.count + 8
+
+    let attributes = [[
+      "attributes": [
+        NSFontAttributeName: StyleGuide.Font.Number.value,
+        NSForegroundColorAttributeName: StyleGuide.Color.Orange.value
+      ],
+      "location": 0,
+      "length": totalOpenCharacters
+    ],[
+      "attributes": [
+        NSFontAttributeName: StyleGuide.Font.Number.value,
+        NSForegroundColorAttributeName: StyleGuide.Color.Black.value
+      ],
+      "location": totalOpenCharacters,
+      "length": 0
+    ]]
+
+    return "\(totalState.open) opened / \(totalState.closed) closed".attributedWithRange(attributes)
     
-    self.prStatusLabel.attributedText = PullRequestViewModel.totalStates(self.pullRequestsViewModel)
+  }
+  
+  fileprivate func animateTotalState() {
     
     UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseOut, animations: {
       self.prStatusHeightConstraint.constant = 50
@@ -63,6 +87,21 @@ class PullRequestListViewController: UIViewController, UITableViewDelegate, UITa
       }, completion: nil)
     }
     
+  }
+  
+  
+  // MARK: - PullRequestViewModelDelegate
+  
+  func pullRequestsRequestSuccess(_ pullRequestsViewModel: [PullRequestViewModel]) {
+    self.pullRequestsViewModel = pullRequestsViewModel
+    self.setTotalState()
+    self.tableView.reloadData()
+    self.spinner.stopAnimating()
+  }
+  
+  func pullRequestsRequestError(_ statusCode: Int, _ response: Any?, _ error: Error?) {
+    Alert.connectionError()
+    _ = self.navigationController?.popViewController(animated: true)
   }
   
   

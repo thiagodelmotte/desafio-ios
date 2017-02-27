@@ -9,7 +9,7 @@ struct PullRequest {
   var ownerNick: String
   var ownerAvatarUrl: String
   
-  init(title: String, body: String, date: String, url: String, state: String, ownerNick: String, ownerAvatarUrl: String) {
+  init(_ title: String, body: String, date: String, url: String, state: String, ownerNick: String, ownerAvatarUrl: String) {
     self.title = title
     self.body = body
     self.date = date

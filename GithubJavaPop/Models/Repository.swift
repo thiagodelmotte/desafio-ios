@@ -8,7 +8,7 @@ struct Repository {
   var ownerNick: String
   var ownerAvatarUrl: String
   
-  init(name: String, description: String, forks: Int, favorites: Int, ownerNick: String, ownerAvatarUrl: String) {
+  init(_ name: String, description: String, forks: Int, favorites: Int, ownerNick: String, ownerAvatarUrl: String) {
     self.name = name
     self.description = description
     self.forks = forks
